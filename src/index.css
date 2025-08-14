@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-white text-gray-900;
+}
+
+@keyframes floatIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* User bubble tail (right side) */
+.user-tail {
+  position: relative;
+  margin-right: 0.5rem;
+}
+
+.user-tail::after {
+  content: "";
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid #bfdbfe; /* Tail same color as bg-blue-100 */
+}
+
+/* AI final bubble tail (left side) */
+.ai-tail {
+  position: relative;
+  margin-left: 0.5rem;
+}
+
+.ai-tail::after {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid #e5e7eb; /* Tail same color as bg-gray-200 */
+}
+
+/* AI temp bubble tail (left side) */
+.ai-temp-tail {
+  position: relative;
+  margin-left: 0.5rem;
+}
+
+.ai-temp-tail::after {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid #d1d5db; /* Tail same color as bg-gray-300 */
+}
