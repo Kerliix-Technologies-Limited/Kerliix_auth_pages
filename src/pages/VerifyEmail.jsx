@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import API from '../api.js';
 
 export default function VerifyEmail() {
   const [code, setCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const isCodeValid = /^\d{8}$/.test(code);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isCodeValid) {
@@ -20,12 +23,22 @@ export default function VerifyEmail() {
 
     setIsSubmitting(true);
 
-    // Simulate async API call delay
-    setTimeout(() => {
+    try {
+      const res = await API.post('/auth/verify-email', { code });
+
+      // Update auth context with returned user
+      login(res.data.user); // Adjust if your API returns user differently
+
       toast.success('Email verified successfully!');
+      navigate('/add-phone');
+    } catch (error) {
+      console.error('Verification failed:', error);
+      const message =
+        error?.response?.data?.message || 'Verification failed. Please try again.';
+      toast.error(message);
+    } finally {
       setIsSubmitting(false);
-      navigate('/add-phone'); // Redirect after success
-    }, 2000);
+    }
   };
 
   return (
@@ -39,7 +52,7 @@ export default function VerifyEmail() {
         <meta name="keywords" content="verify email, email verification, Kerliix" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        {/* Open Graph tags */}
+        {/* Open Graph */}
         <meta property="og:title" content="Verify Your Email - Kerliix" />
         <meta
           property="og:description"
@@ -48,7 +61,7 @@ export default function VerifyEmail() {
         <meta property="og:type" content="website" />
         <meta property="og:url" content={window.location.href} />
 
-        {/* Twitter Card tags */}
+        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Verify Your Email - Kerliix" />
         <meta

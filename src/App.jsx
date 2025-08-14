@@ -35,6 +35,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/logout" element={<Logout />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       {/* Toast notifications */}

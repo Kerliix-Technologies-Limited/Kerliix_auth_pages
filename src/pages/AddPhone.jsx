@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
+import { useAuth } from '../context/AuthContext';
+import API from '../api.js';
 
 export default function AddPhone() {
   const [phone, setPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth(); // optional, if you want to update user info on phone add
 
-  const isPhoneValid = /^\+?\d{10,15}$/.test(phone); // Basic validation
+  const isPhoneValid = /^\+?\d{10,15}$/.test(phone);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isPhoneValid) {
@@ -20,11 +23,24 @@ export default function AddPhone() {
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      const res = await API.post('/auth/add-phone', { phone });
+
+      // Optionally update user in context if API returns updated user
+      if (res.data.user) {
+        login(res.data.user);
+      }
+
       toast.success('Phone number added successfully!');
-      setIsSubmitting(false);
       navigate('/verify-phone');
-    }, 2000);
+    } catch (error) {
+      console.error('Add phone failed:', error);
+      const message =
+        error?.response?.data?.message || 'Failed to add phone number. Please try again.';
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSkip = () => {
@@ -36,18 +52,27 @@ export default function AddPhone() {
     <>
       <Helmet>
         <title>Add Phone Number - Kerliix</title>
-        <meta name="description" content="Add your phone number to secure your account at Kerliix." />
+        <meta
+          name="description"
+          content="Add your phone number to secure your account at Kerliix."
+        />
         <meta name="keywords" content="add phone, phone number, Kerliix" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
         <meta property="og:title" content="Add Phone Number - Kerliix" />
-        <meta property="og:description" content="Add your phone number to secure your account at Kerliix." />
+        <meta
+          property="og:description"
+          content="Add your phone number to secure your account at Kerliix."
+        />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={window.location.href} />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Add Phone Number - Kerliix" />
-        <meta name="twitter:description" content="Add your phone number to secure your account." />
+        <meta
+          name="twitter:description"
+          content="Add your phone number to secure your account."
+        />
       </Helmet>
 
       <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-900 via-black to-gray-900">

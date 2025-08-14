@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom'; // ⬅️ import useNavigate
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import API from '../api.js';
 
 export default function VerifyPhone() {
   const [code, setCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate(); // ⬅️ initialize navigation
+  const navigate = useNavigate();
+  const { login } = useAuth(); // Optional: update user info after verification
 
-  const isCodeValid = /^\d{6}$/.test(code); // 6-digit numeric code
+  const isCodeValid = /^\d{6}$/.test(code);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isCodeValid) {
@@ -20,19 +23,34 @@ export default function VerifyPhone() {
 
     setIsSubmitting(true);
 
-    // Simulate API delay
-    setTimeout(() => {
+    try {
+      const res = await API.post('/auth/verify-phone', { code });
+
+      // Optionally update user info if returned by API
+      if (res.data.user) {
+        login(res.data.user);
+      }
+
       toast.success('Phone number verified successfully!');
+      navigate('/profile-picture');
+    } catch (error) {
+      console.error('Phone verification failed:', error);
+      const message =
+        error?.response?.data?.message || 'Failed to verify phone number. Please try again.';
+      toast.error(message);
+    } finally {
       setIsSubmitting(false);
-      navigate('/profile-picture'); // ⬅️ navigate to profile picture step
-    }, 2000);
+    }
   };
 
   return (
     <>
       <Helmet>
         <title>Verify Your Phone - Kerliix</title>
-        <meta name="description" content="Verify your phone number to secure your account at Kerliix." />
+        <meta
+          name="description"
+          content="Verify your phone number to secure your account at Kerliix."
+        />
         <meta name="keywords" content="verify phone, phone verification, Kerliix" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 

@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Confetti from 'react-confetti';
 import { motion } from 'framer-motion';
-import { useAuth } from '../context/AuthContext'; // ✅ Use the custom hook
+import { useAuth } from '../context/AuthContext';
 
 export default function Welcome() {
   const navigate = useNavigate();
-  const { user } = useAuth(); // ✅ Get user from custom hook
+  const { user } = useAuth();
   const [showConfetti, setShowConfetti] = useState(true);
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
 
@@ -33,7 +33,7 @@ export default function Welcome() {
     <>
       <Helmet>
         <title>Welcome to Kerliix</title>
-        <meta name="description" content="Welcome to Kerliix — Connect. Understand. Unify." />
+        <meta name="description" content="Welcome to Kerliix." />
       </Helmet>
 
       {showConfetti && (

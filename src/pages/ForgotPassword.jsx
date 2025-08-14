@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
+import API from '../api.js';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');

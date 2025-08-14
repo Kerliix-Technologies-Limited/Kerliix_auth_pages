@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
+import API from '../api.js';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
@@ -21,11 +23,10 @@ export default function ResetPassword() {
 
     setIsSubmitting(true);
 
-    // Simulate password reset
     setTimeout(() => {
       toast.success('Password reset successfully!');
       setIsSubmitting(false);
-      navigate('/login'); // Redirect to login
+      navigate('/login');
     }, 2000);
   };
 

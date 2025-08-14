@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
+import { useAuth } from '../context/AuthContext';
+import API from '../api.js';
 
 export default function Login() {
   const [emailOrUsername, setEmailOrUsername] = useState('');
@@ -9,6 +11,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const isFormValid = emailOrUsername.trim() !== '' && password.trim() !== '';
 
@@ -22,12 +25,33 @@ export default function Login() {
 
     setIsSubmitting(true);
 
-    // Simulate login delay (e.g., API call)
-    setTimeout(() => {
-      toast.success(`Logged in as: ${emailOrUsername}`);
+    try {
+      // Send login request to backend
+      const response = await API.post('/auth/login', {
+        emailOrUsername,
+        password,
+      });
+
+      // Assume backend returns user info on success
+      const userData = response.data;
+      
+      // Update auth context user state
+      login(userData);
+
+      toast.success(`Logged in as: ${userData.username || userData.email}`);
+
+      // Navigate to dashboard or home page
+      navigate('/dashboard');
+    } catch (error) {
+      // Handle login errors
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Login failed. Please try again.');
+      }
+    } finally {
       setIsSubmitting(false);
-      // Redirect after login if needed
-    }, 2000);
+    }
   };
 
   return (
@@ -43,14 +67,6 @@ export default function Login() {
         <meta property="og:description" content="Login to access your account on Kerliix." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={window.location.href} />
-        {/* You can add og:image if you have a URL to a preview image */}
-        {/* <meta property="og:image" content="https://kerliix.com/preview-image.png" /> */}
-
-        {/* Twitter Card tags */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Welcome back - Kerliix" />
-        <meta name="twitter:description" content="Login to access your account on Kerliix." />
-        {/* <meta name="twitter:image" content="https://kerliix.com/preview-image.png" /> */}
       </Helmet>
 
       <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-900 via-black to-gray-900">
@@ -132,7 +148,6 @@ export default function Login() {
               )}
             </button>
 
-            {/* Forgot Password link aligned left after login button */}
             <div className="text-left">
               <button
                 type="button"

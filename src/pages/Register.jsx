@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
+import API from '../api.js';
 
 export default function Register() {
   const [firstName, setFirstName] = useState('');
@@ -11,6 +12,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const navigate = useNavigate();
 
   const isFormValid =
@@ -32,34 +34,51 @@ export default function Register() {
 
     setIsSubmitting(true);
 
-    // Simulate register delay (e.g., API call)
-    setTimeout(() => {
-      toast.success(`Registered successfully as: ${username}`);
+    try {
+      const res = await API.post('/auth/register', {
+        firstName,
+        lastName,
+        username,
+        email,
+        password,
+        confirmPassword,
+      });
+
+      toast.success(res.data.message);
+      navigate('/verify-email');
+    } catch (error) {
+      console.error('Registration error response:', error.response);
+      const message =
+        error.response?.data?.message || 'Registration failed. Please try again.';
+      toast.error(message);
+    } finally {
       setIsSubmitting(false);
-      navigate('/verify-email'); // Redirect to verify-email page after successful registration
-    }, 2000);
+    }
   };
 
   return (
     <>
       <Helmet>
         <title>Create an Account - Kerliix</title>
-        <meta name="description" content="Register to create your Kerliix account and join the community." />
+        <meta
+          name="description"
+          content="Register to create your Kerliix account and join the community."
+        />
         <meta name="keywords" content="register, signup, create account, Kerliix" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-        {/* Open Graph tags */}
         <meta property="og:title" content="Create an Account - Kerliix" />
-        <meta property="og:description" content="Register to create your Kerliix account and join the community." />
+        <meta
+          property="og:description"
+          content="Register to create your Kerliix account and join the community."
+        />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={window.location.href} />
-        {/* <meta property="og:image" content="https://kerliix.com/preview-image.png" /> */}
-
-        {/* Twitter Card tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Create an Account - Kerliix" />
-        <meta name="twitter:description" content="Register to create your Kerliix account and join the community." />
-        {/* <meta name="twitter:image" content="https://kerliix.com/preview-image.png" /> */}
+        <meta
+          name="twitter:description"
+          content="Register to create your Kerliix account and join the community."
+        />
       </Helmet>
 
       <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-900 via-black to-gray-900">
@@ -67,7 +86,6 @@ export default function Register() {
           <h2 className="text-3xl font-bold text-white mb-6 text-center">Register</h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* First Name and Last Name on same horizontal line */}
             <div className="flex space-x-4">
               <div className="flex-1">
                 <input
@@ -92,7 +110,6 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Username */}
             <div>
               <input
                 type="text"
@@ -104,7 +121,6 @@ export default function Register() {
               />
             </div>
 
-            {/* Email */}
             <div>
               <input
                 type="email"
@@ -116,10 +132,9 @@ export default function Register() {
               />
             </div>
 
-            {/* Password */}
             <div>
               <input
-                type="text"
+                type="password"
                 className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
                 placeholder="Password"
                 value={password}
@@ -128,10 +143,9 @@ export default function Register() {
               />
             </div>
 
-            {/* Confirm Password */}
             <div>
               <input
-                type="text"
+                type="password"
                 className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
                 placeholder="Verify Password"
                 value={confirmPassword}
@@ -140,7 +154,6 @@ export default function Register() {
               />
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={!isFormValid || isSubmitting}
@@ -182,7 +195,6 @@ export default function Register() {
               )}
             </button>
 
-            {/* Link to login */}
             <div className="mt-6 text-center text-white text-sm">
               Already have an account?{' '}
               <button

@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
+import { useAuth } from '../context/AuthContext';
+import API from '../api.js';
 
 export default function AddProfilePicture() {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth(); // Optional: update user if server returns new data
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -19,7 +22,7 @@ export default function AddProfilePicture() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!file) {
@@ -29,12 +32,30 @@ export default function AddProfilePicture() {
 
     setIsSubmitting(true);
 
-    // Simulate image upload
-    setTimeout(() => {
+    const formData = new FormData();
+    formData.append('avatar', file); // Assuming your backend expects field name "avatar"
+
+    try {
+      const res = await API.post('/auth/avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
       toast.success('Profile picture uploaded successfully!');
-      setIsSubmitting(false);
+
+      // If your backend returns updated user info, update auth context
+      if (res.data?.user) {
+        login(res.data.user);
+      }
+
       navigate('/welcome');
-    }, 2000);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload profile picture.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSkip = () => {
