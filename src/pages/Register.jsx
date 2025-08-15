@@ -45,7 +45,7 @@ export default function Register() {
       });
 
       toast.success(res.data.message);
-      navigate('/verify-email');
+      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (error) {
       console.error('Registration error response:', error.response);
       const message =

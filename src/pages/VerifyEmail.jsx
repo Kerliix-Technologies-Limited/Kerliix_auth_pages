@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../api.js';
 
@@ -9,7 +9,12 @@ export default function VerifyEmail() {
   const [code, setCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+
+  // ✅ Extract email from URL query parameter
+  const queryParams = new URLSearchParams(location.search);
+  const email = queryParams.get('email');
 
   const isCodeValid = /^\d{8}$/.test(code);
 
@@ -21,14 +26,21 @@ export default function VerifyEmail() {
       return;
     }
 
+    if (!email) {
+      toast.error('Email is missing. Please try again.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const res = await API.post('/auth/verify-email', { code });
+      // ✅ Send both code and email to backend
+      const res = await API.post('/auth/verify-email', {
+        code,
+        email,
+      });
 
-      // Update auth context with returned user
-      login(res.data.user); // Adjust if your API returns user differently
-
+      login(res.data.user); // Adjust if needed
       toast.success('Email verified successfully!');
       navigate('/add-phone');
     } catch (error) {
@@ -51,8 +63,6 @@ export default function VerifyEmail() {
         />
         <meta name="keywords" content="verify email, email verification, Kerliix" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-        {/* Open Graph */}
         <meta property="og:title" content="Verify Your Email - Kerliix" />
         <meta
           property="og:description"
@@ -60,8 +70,6 @@ export default function VerifyEmail() {
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={window.location.href} />
-
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Verify Your Email - Kerliix" />
         <meta
@@ -78,6 +86,18 @@ export default function VerifyEmail() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* ✅ Disabled email field */}
+            <div>
+              <label className="block mb-1 text-white">Email</label>
+              <input
+                type="email"
+                className="w-full px-4 py-2 rounded-lg bg-white/10 text-gray-300 cursor-not-allowed"
+                value={email || ''}
+                disabled
+              />
+            </div>
+
+            {/* ✅ Code input field */}
             <div>
               <label className="block mb-1 text-white">Verification Code</label>
               <input
@@ -97,6 +117,7 @@ export default function VerifyEmail() {
               />
             </div>
 
+            {/* ✅ Submit button */}
             <button
               type="submit"
               disabled={!isCodeValid || isSubmitting}
