@@ -1,9 +1,10 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://kerliix-auth-server-ojud.onrender.com/api',
+  baseURL: 'https://api.kerliix.com/api',
   withCredentials: true,
 });
 
 export default API;
+
 
