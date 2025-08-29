@@ -7,7 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch current user info on mount or refresh
+  // 🔄 Attempt to fetch current user
   const fetchUser = async () => {
     setLoading(true);
     try {
@@ -15,11 +15,16 @@ export function AuthProvider({ children }) {
       setUser(res.data);
     } catch (error) {
       if (error.response?.status === 401) {
-        // Not logged in — clear user without logging error
-        setUser(null);
-        // Optionally: console.info('No user logged in');
+        // Access token may be expired → try refreshing
+        try {
+          await API.get('/auth/refresh-token');
+          const res = await API.get('/auth/me');
+          setUser(res.data);
+        } catch (refreshErr) {
+          console.warn('Refresh failed, logging out');
+          setUser(null);
+        }
       } else {
-        // Log unexpected errors
         console.error('Failed to fetch user:', error);
       }
     } finally {
@@ -27,21 +32,21 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Run once on mount
   useEffect(() => {
     fetchUser();
   }, []);
 
-  // Login sets user data in context
+  // Login helper — after successful login API call
   const login = (userData) => setUser(userData);
 
-  // Logout calls API and clears user on success
+  // Logout
   const logout = async () => {
     try {
       await API.post('/auth/logout');
       setUser(null);
     } catch (error) {
       console.error('Logout failed:', error);
-      // Optionally add UI feedback here
     }
   };
 
@@ -52,7 +57,7 @@ export function AuthProvider({ children }) {
   );
 }
 
-// Custom hook to consume AuthContext easily
+// Custom hook for easier access
 export function useAuth() {
   return useContext(AuthContext);
 }
