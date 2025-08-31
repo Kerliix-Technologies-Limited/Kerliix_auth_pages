@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../context/AuthContext';
@@ -10,8 +10,14 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const location = useLocation();
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  // Get redirect query param, default to accounts.kerliix.com
+  const searchParams = new URLSearchParams(location.search);
+  const redirectUrl = searchParams.get('redirect') || 'https://accounts.kerliix.com';
 
   const isFormValid = emailOrUsername.trim() !== '' && password.trim() !== '';
 
@@ -32,19 +38,17 @@ export default function Login() {
         password,
       });
 
-      // Assume backend returns user info on success
       const userData = response.data;
-      
-      // Update auth context user state
+
+      // Update auth context
       login(userData);
 
       toast.success(`Logged in as: ${userData.username || userData.email}`);
 
-      // Navigate to dashboard or home page
-      navigate('/dashboard');
+      // Redirect to intended page or default
+      window.location.href = redirectUrl;
     } catch (error) {
-      // Handle login errors
-      if (error.response && error.response.data && error.response.data.message) {
+      if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {
         toast.error('Login failed. Please try again.');
@@ -61,8 +65,6 @@ export default function Login() {
         <meta name="description" content="Login to access your account on Kerliix." />
         <meta name="keywords" content="login, Kerliix, user account, authentication" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-        {/* Open Graph tags */}
         <meta property="og:title" content="Welcome back - Kerliix" />
         <meta property="og:description" content="Login to access your account on Kerliix." />
         <meta property="og:type" content="website" />
@@ -162,7 +164,11 @@ export default function Login() {
           <div className="mt-6 text-center text-white text-sm">
             Don't have an account?{' '}
             <button
-              onClick={() => navigate('/register')}
+              onClick={() =>
+                navigate(
+                  `/register${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ''}`
+                )
+              }
               className="text-blue-300 hover:underline"
             >
               Register

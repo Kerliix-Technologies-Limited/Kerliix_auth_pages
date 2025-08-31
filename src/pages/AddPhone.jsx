@@ -1,38 +1,48 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../api.js';
 
 export default function AddPhone() {
+  const [countryCode, setCountryCode] = useState('+1'); // default country code
   const [phone, setPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth(); // optional, if you want to update user info on phone add
+  const location = useLocation();
+  const { login } = useAuth();
 
-  const isPhoneValid = /^\+?\d{10,15}$/.test(phone);
+  const queryParams = new URLSearchParams(location.search);
+  const email = queryParams.get('email');
+
+  // Validate country code (should start with + and digits)
+  const isCountryCodeValid = /^\+\d{1,4}$/.test(countryCode);
+  // Validate phone (digits only, length 4-14 for local number)
+  const isPhoneValid = /^\d{4,14}$/.test(phone);
+  // Full number validation: combined string with no spaces
+  const fullPhone = `${countryCode}${phone}`;
+  const isFullPhoneValid = isCountryCodeValid && isPhoneValid;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!isPhoneValid) {
-      toast.error('Please enter a valid phone number.');
+    if (!isFullPhoneValid) {
+      toast.error('Please enter a valid country code and phone number.');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const res = await API.post('/auth/add-phone', { phone });
+      const res = await API.post('/auth/add-phone', { phone: fullPhone });
 
-      // Optionally update user in context if API returns updated user
       if (res.data.user) {
         login(res.data.user);
       }
 
       toast.success('Phone number added successfully!');
-      navigate('/verify-phone');
+      navigate(`/verify-phone?email=${encodeURIComponent(email)}`);
     } catch (error) {
       console.error('Add phone failed:', error);
       const message =
@@ -45,7 +55,7 @@ export default function AddPhone() {
 
   const handleSkip = () => {
     toast.info('You skipped phone number setup.');
-    navigate('/profile-picture');
+    navigate(`/profile-picture?email=${encodeURIComponent(email)}`);
   };
 
   return (
@@ -58,21 +68,6 @@ export default function AddPhone() {
         />
         <meta name="keywords" content="add phone, phone number, Kerliix" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-        <meta property="og:title" content="Add Phone Number - Kerliix" />
-        <meta
-          property="og:description"
-          content="Add your phone number to secure your account at Kerliix."
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={window.location.href} />
-
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Add Phone Number - Kerliix" />
-        <meta
-          name="twitter:description"
-          content="Add your phone number to secure your account."
-        />
       </Helmet>
 
       <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-900 via-black to-gray-900">
@@ -82,24 +77,34 @@ export default function AddPhone() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block mb-1 text-white">Phone Number</label>
-              <input
-                type="tel"
-                className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300 text-center text-lg"
-                placeholder="+12345678901"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-              />
+              <div className="flex space-x-3">
+                <input
+                  type="text"
+                  className="w-1/4 px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300 text-center text-lg"
+                  placeholder="+1"
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value.trim())}
+                  required
+                />
+                <input
+                  type="tel"
+                  className="w-3/4 px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300 text-center text-lg"
+                  placeholder="1234567890"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} // only digits
+                  required
+                />
+              </div>
             </div>
 
             <button
               type="submit"
-              disabled={!isPhoneValid || isSubmitting}
+              disabled={!isFullPhoneValid || isSubmitting}
               className={`w-full py-2 px-4 rounded-lg font-semibold transition duration-200
                 ${
                   isSubmitting
                     ? 'bg-blue-700 text-white cursor-wait'
-                    : !isPhoneValid
+                    : !isFullPhoneValid
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                     : 'bg-blue-600 hover:bg-blue-700 text-white'
                 }`}

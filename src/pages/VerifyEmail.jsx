@@ -12,7 +12,7 @@ export default function VerifyEmail() {
   const location = useLocation();
   const { login } = useAuth();
 
-  // ✅ Extract email from URL query parameter
+  // Extract email from query parameters
   const queryParams = new URLSearchParams(location.search);
   const email = queryParams.get('email');
 
@@ -34,15 +34,17 @@ export default function VerifyEmail() {
     setIsSubmitting(true);
 
     try {
-      // ✅ Send both code and email to backend
       const res = await API.post('/auth/verify-email', {
         code,
         email,
       });
 
-      login(res.data.user); // Adjust if needed
+      login(res.data.user); // Log in user
+
       toast.success('Email verified successfully!');
-      navigate('/add-phone');
+
+      // Always navigate to /add-phone with email passed in query string
+      navigate(`/add-phone?email=${encodeURIComponent(email)}`);
     } catch (error) {
       console.error('Verification failed:', error);
       const message =
@@ -86,7 +88,6 @@ export default function VerifyEmail() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* ✅ Disabled email field */}
             <div>
               <label className="block mb-1 text-white">Email</label>
               <input
@@ -97,7 +98,6 @@ export default function VerifyEmail() {
               />
             </div>
 
-            {/* ✅ Code input field */}
             <div>
               <label className="block mb-1 text-white">Verification Code</label>
               <input
@@ -117,7 +117,6 @@ export default function VerifyEmail() {
               />
             </div>
 
-            {/* ✅ Submit button */}
             <button
               type="submit"
               disabled={!isCodeValid || isSubmitting}

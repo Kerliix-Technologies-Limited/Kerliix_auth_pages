@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
 import API from '../api.js';
@@ -14,6 +14,19 @@ export default function Register() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get redirect and password from query params if they exist
+  const searchParams = new URLSearchParams(location.search);
+  const redirectUrl = searchParams.get('redirect') || 'https://accounts.kerliix.com';
+  const passwordFromLogin = searchParams.get('password') || '';
+
+  useEffect(() => {
+    if (passwordFromLogin) {
+      setPassword(passwordFromLogin);
+      setConfirmPassword(passwordFromLogin);
+    }
+  }, [passwordFromLogin]);
 
   const isFormValid =
     firstName.trim() !== '' &&
@@ -45,7 +58,9 @@ export default function Register() {
       });
 
       toast.success(res.data.message);
-      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+
+      // Redirect to verify-email with email and redirect params
+      navigate(`/verify-email?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirectUrl)}`);
     } catch (error) {
       console.error('Registration error response:', error.response);
       const message =
@@ -198,7 +213,9 @@ export default function Register() {
             <div className="mt-6 text-center text-white text-sm">
               Already have an account?{' '}
               <button
-                onClick={() => navigate('/login')}
+                onClick={() =>
+                  navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}&password=${encodeURIComponent(password)}`)
+                }
                 className="text-blue-300 hover:underline"
               >
                 Log In

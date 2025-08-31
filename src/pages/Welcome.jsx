@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Confetti from 'react-confetti';
 import { motion } from 'framer-motion';
@@ -7,9 +7,14 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Welcome() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [showConfetti, setShowConfetti] = useState(true);
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+  // Extract redirect param from URL query
+  const queryParams = new URLSearchParams(location.search);
+  const redirectUrl = queryParams.get('redirect');
 
   useEffect(() => {
     const timer = setTimeout(() => setShowConfetti(false), 5000);
@@ -24,8 +29,17 @@ export default function Welcome() {
   }, []);
 
   const handleContinue = () => {
-    navigate('/dashboard');
-  };
+  if (redirectUrl && redirectUrl.trim() !== '') {
+    if (redirectUrl.startsWith('http')) {
+      window.location.href = redirectUrl;
+    } else {
+      navigate(redirectUrl);
+    }
+  } else {
+    // Default redirect to accounts.kerliix.com if no redirect param
+    window.location.href = 'https://accounts.kerliix.com';
+  }
+};
 
   const displayName = user?.name || 'there';
 
