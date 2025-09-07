@@ -13,6 +13,9 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Logout from './pages/Logout';
 
+// NEW MFA VERIFY PAGE
+import MfaVerify from './pages/MfaVerify';
+
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
@@ -26,6 +29,7 @@ function App() {
           element={user ? <Navigate to="/profile-picture" /> : <Navigate to="/login" />}
         />
         <Route path="/login" element={<Login />} />
+        <Route path="/mfa-verify" element={<MfaVerify />} /> {/* NEW ROUTE */}
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/add-phone" element={<AddPhone />} />
@@ -38,7 +42,6 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {/* Toast notifications */}
       <ToastContainer
         position="top-center"
         autoClose={3000}

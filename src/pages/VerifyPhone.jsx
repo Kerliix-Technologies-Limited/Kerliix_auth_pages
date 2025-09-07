@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../api.js';
+import Button from '../components/Button.jsx';
 
 export default function VerifyPhone() {
   const [code, setCode] = useState('');
@@ -120,46 +121,10 @@ export default function VerifyPhone() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={!isCodeValid || isSubmitting}
-              className={`w-full py-2 px-4 rounded-lg font-semibold transition duration-200
-                ${
-                  isSubmitting
-                    ? 'bg-blue-700 text-white cursor-wait'
-                    : !isCodeValid
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
-            >
-              {isSubmitting ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v8H4z"
-                    ></path>
-                  </svg>
-                  <span>Verifying...</span>
-                </div>
-              ) : (
-                'Verify Phone'
-              )}
-            </button>
+            {/* Replaced native button with reusable Button component */}
+            <Button type="submit" disabled={!isCodeValid || isSubmitting} isLoading={isSubmitting}>
+              Verify Phone
+            </Button>
 
             <p className="mt-4 text-center text-sm text-gray-300">
               Didn't receive the code?{' '}

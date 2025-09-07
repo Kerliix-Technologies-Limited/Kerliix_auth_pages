@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../api.js';
+import Button from '../components/Button'; // Import the custom Button
 
 export default function AddPhone() {
   const [countryCode, setCountryCode] = useState('+1'); // default country code
@@ -97,20 +98,14 @@ export default function AddPhone() {
               </div>
             </div>
 
-            <button
+            {/* Use the custom Button component */}
+            <Button
               type="submit"
               disabled={!isFullPhoneValid || isSubmitting}
-              className={`w-full py-2 px-4 rounded-lg font-semibold transition duration-200
-                ${
-                  isSubmitting
-                    ? 'bg-blue-700 text-white cursor-wait'
-                    : !isFullPhoneValid
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
+              isLoading={isSubmitting}
             >
-              {isSubmitting ? 'Processing...' : 'Add Phone Number'}
-            </button>
+              Add Phone Number
+            </Button>
           </form>
 
           <div className="mt-6 text-center">

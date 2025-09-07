@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
 import API from '../api.js';
+import Button from '../components/Button'; // Import reusable Button
 
 export default function Register() {
   const [firstName, setFirstName] = useState('');
@@ -16,7 +17,6 @@ export default function Register() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get redirect and password from query params if they exist
   const searchParams = new URLSearchParams(location.search);
   const redirectUrl = searchParams.get('redirect') || 'https://accounts.kerliix.com';
   const passwordFromLogin = searchParams.get('password') || '';
@@ -59,12 +59,14 @@ export default function Register() {
 
       toast.success(res.data.message);
 
-      // Redirect to verify-email with email and redirect params
-      navigate(`/verify-email?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirectUrl)}`);
+      navigate(
+        `/verify-email?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(
+          redirectUrl
+        )}`
+      );
     } catch (error) {
       console.error('Registration error response:', error.response);
-      const message =
-        error.response?.data?.message || 'Registration failed. Please try again.';
+      const message = error.response?.data?.message || 'Registration failed. Please try again.';
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -169,52 +171,20 @@ export default function Register() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={!isFormValid || isSubmitting}
-              className={`w-full py-2 px-4 rounded-lg font-semibold transition duration-200
-                ${
-                  isSubmitting
-                    ? 'bg-blue-700 text-white cursor-wait'
-                    : !isFormValid
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
-            >
-              {isSubmitting ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v8H4z"
-                    ></path>
-                  </svg>
-                  <span>Processing...</span>
-                </div>
-              ) : (
-                'Register'
-              )}
-            </button>
+            {/* Use reusable Button component */}
+            <Button type="submit" disabled={!isFormValid} isLoading={isSubmitting}>
+              Register
+            </Button>
 
             <div className="mt-6 text-center text-white text-sm">
               Already have an account?{' '}
               <button
                 onClick={() =>
-                  navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}&password=${encodeURIComponent(password)}`)
+                  navigate(
+                    `/login?redirect=${encodeURIComponent(redirectUrl)}&password=${encodeURIComponent(
+                      password
+                    )}`
+                  )
                 }
                 className="text-blue-300 hover:underline"
               >
