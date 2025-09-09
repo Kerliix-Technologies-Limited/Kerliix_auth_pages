@@ -11,16 +11,18 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [step, setStep] = useState(1); // Step 1: email/username, Step 2: password
+  const [step, setStep] = useState(1); // 1: identify, 2: password/passkey
+  const [userMeta, setUserMeta] = useState(null); // store { firstName, lastName, hasPasskeys, mfaMethods }
 
   const location = useLocation();
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const searchParams = new URLSearchParams(location.search);
-  const redirectUrl = searchParams.get('redirect') || 'https://accounts.kerliix.com';
+  const redirectUrl =
+    searchParams.get('redirect') || 'https://accounts.kerliix.com';
 
-  // Check email/username validity in step 1
+  // Step 1: Identify user
   const handleEmailOrUsernameSubmit = async (e) => {
     e.preventDefault();
 
@@ -32,10 +34,11 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
-      // Assuming you have an API endpoint to validate if email/username exists:
-      await API.post('/auth/check-username', { emailOrUsername });
+      const res = await API.post('/auth/check-user-exists', {
+        emailOrUsername,
+      });
 
-      // If successful, go to step 2 to show password input
+      setUserMeta(res.data);
       setStep(2);
     } catch (error) {
       toast.error(
@@ -47,7 +50,7 @@ export default function Login() {
     }
   };
 
-  // Actual login with password
+  // Step 2A: Login with password
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
 
@@ -59,23 +62,67 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
-      const response = await API.post('/auth/login', {
+      const response = await API.post('/auth/login/password', {
         emailOrUsername,
         password,
       });
 
-      const userData = response.data;
+      const data = response.data;
 
-      login(userData);
-      toast.success(`Logged in as: ${userData.firstName} ${userData.lastName}`);
-
-      window.location.href = redirectUrl;
-    } catch (error) {
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
+      if (data.mfaRequired) {
+        // Redirect to MFA verification
+        navigate('/mfa-verify', {
+          state: {
+            userId: data.userId,
+            mfaMethods: data.mfaMethods,
+            redirectUrl,
+          },
+        });
       } else {
-        toast.error('Login failed. Please try again.');
+        login(data);
+        toast.success(
+          `Logged in as: ${data.firstName} ${data.lastName}`
+        );
+        window.location.href = redirectUrl;
       }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || 'Login failed. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Step 2B: Login with passkey
+  const handlePasskeyLogin = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await API.post('/auth/login/passkey', {
+        emailOrUsername,
+      });
+
+      const data = response.data;
+
+      if (data.mfaRequired) {
+        navigate('/mfa-verify', {
+          state: {
+            userId: data.userId,
+            mfaMethods: data.mfaMethods,
+            redirectUrl,
+          },
+        });
+      } else {
+        login(data);
+        toast.success(
+          `Logged in as: ${data.firstName} ${data.lastName}`
+        );
+        window.location.href = redirectUrl;
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || 'Passkey login failed.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -85,23 +132,27 @@ export default function Login() {
     <>
       <Helmet>
         <title>Welcome back - Kerliix</title>
-        <meta name="description" content="Login to access your account on Kerliix." />
-        <meta name="keywords" content="login, Kerliix, user account, authentication" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta property="og:title" content="Welcome back - Kerliix" />
-        <meta property="og:description" content="Login to access your account on Kerliix." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={window.location.href} />
+        <meta
+          name="description"
+          content="Login to access your account on Kerliix."
+        />
       </Helmet>
 
       <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-900 via-black to-gray-900">
         <div className="bg-white/10 p-8 rounded-lg shadow-lg w-full max-w-md backdrop-blur-md border border-white/20">
-          <h2 className="text-3xl font-bold text-white mb-6 text-center">Login</h2>
+          <h2 className="text-3xl font-bold text-white mb-6 text-center">
+            Login
+          </h2>
 
           {step === 1 && (
-            <form onSubmit={handleEmailOrUsernameSubmit} className="space-y-5">
+            <form
+              onSubmit={handleEmailOrUsernameSubmit}
+              className="space-y-5"
+            >
               <div>
-                <label className="block text-white mb-1">Email or Username</label>
+                <label className="block text-white mb-1">
+                  Email or Username
+                </label>
                 <input
                   type="text"
                   className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
@@ -112,50 +163,77 @@ export default function Login() {
                 />
               </div>
 
-              <Button type="submit" disabled={emailOrUsername.trim() === ''} isLoading={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={emailOrUsername.trim() === ''}
+                isLoading={isSubmitting}
+              >
                 Next
               </Button>
             </form>
           )}
 
           {step === 2 && (
-            <form onSubmit={handlePasswordSubmit} className="space-y-5">
-              <div>
-                <label className="block text-white mb-1">Email or Username</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300 cursor-not-allowed"
-                  value={emailOrUsername}
-                  disabled
-                />
-              </div>
-
-              <div>
-                <label className="block text-white mb-1">Password</label>
-                <div className="relative">
+            <>
+              <form
+                onSubmit={handlePasswordSubmit}
+                className="space-y-5"
+              >
+                <div>
+                  <label className="block text-white mb-1">
+                    Email or Username
+                  </label>
                   <input
-                    type={showPassword ? 'text' : 'password'}
-                    className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    type="text"
+                    className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none cursor-not-allowed"
+                    value={emailOrUsername}
+                    disabled
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-300 hover:text-white"
-                  >
-                    {showPassword ? 'Hide' : 'Show'}
-                  </button>
                 </div>
-              </div>
 
-              <Button type="submit" disabled={password.trim() === ''} isLoading={isSubmitting}>
-                Log In
-              </Button>
+                <div>
+                  <label className="block text-white mb-1">Password</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-300 hover:text-white"
+                    >
+                      {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                </div>
 
-              <div className="text-left">
+                <Button
+                  type="submit"
+                  disabled={password.trim() === ''}
+                  isLoading={isSubmitting}
+                >
+                  Log In
+                </Button>
+              </form>
+
+              {userMeta?.hasPasskeys && (
+                <div className="mt-4">
+                  <Button
+                    type="button"
+                    onClick={handlePasskeyLogin}
+                    isLoading={isSubmitting}
+                  >
+                    Use Passkey
+                  </Button>
+                </div>
+              )}
+
+              <div className="text-left mt-4">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
@@ -164,15 +242,19 @@ export default function Login() {
                   Back
                 </button>
               </div>
-            </form>
+            </>
           )}
 
           <div className="mt-6 text-center text-white text-sm">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <button
               onClick={() =>
                 navigate(
-                  `/register${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ''}`
+                  `/register${
+                    redirectUrl
+                      ? `?redirect=${encodeURIComponent(redirectUrl)}`
+                      : ''
+                  }`
                 )
               }
               className="text-blue-300 hover:underline"
@@ -184,4 +266,4 @@ export default function Login() {
       </div>
     </>
   );
-}
+  }
