@@ -12,7 +12,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1); // 1: identify, 2: password/passkey
-  const [userMeta, setUserMeta] = useState(null); // store { firstName, lastName, hasPasskeys, mfaMethods }
+  const [userMeta, setUserMeta] = useState(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -70,7 +70,6 @@ export default function Login() {
       const data = response.data;
 
       if (data.mfaRequired) {
-        // Redirect to MFA verification
         navigate('/mfa-verify', {
           state: {
             userId: data.userId,
@@ -212,13 +211,23 @@ export default function Login() {
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={password.trim() === ''}
-                  isLoading={isSubmitting}
-                >
-                  Log In
-                </Button>
+                <div className="flex items-center justify-between">
+                  <Button
+                    type="submit"
+                    disabled={password.trim() === ''}
+                    isLoading={isSubmitting}
+                  >
+                    Log In
+                  </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/forgot-password')}
+                    className="text-sm text-blue-300 hover:underline ml-3"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
               </form>
 
               {userMeta?.hasPasskeys && (
@@ -266,4 +275,4 @@ export default function Login() {
       </div>
     </>
   );
-  }
+        }
