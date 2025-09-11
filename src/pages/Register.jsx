@@ -2,16 +2,20 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
+import { Eye, EyeOff } from 'lucide-react'; // for show/hide icons
 import API from '../api.js';
-import Button from '../components/Button'; // Import reusable Button
+import Button from '../components/Button';
 
 export default function Register() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [dob, setDob] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
@@ -33,6 +37,7 @@ export default function Register() {
     lastName.trim() !== '' &&
     username.trim() !== '' &&
     email.trim() !== '' &&
+    dob.trim() !== '' &&
     password.trim() !== '' &&
     confirmPassword.trim() !== '' &&
     password === confirmPassword;
@@ -53,6 +58,7 @@ export default function Register() {
         lastName,
         username,
         email,
+        dob,
         password,
         confirmPassword,
       });
@@ -77,25 +83,6 @@ export default function Register() {
     <>
       <Helmet>
         <title>Create an Account - Kerliix</title>
-        <meta
-          name="description"
-          content="Register to create your Kerliix account and join the community."
-        />
-        <meta name="keywords" content="register, signup, create account, Kerliix" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta property="og:title" content="Create an Account - Kerliix" />
-        <meta
-          property="og:description"
-          content="Register to create your Kerliix account and join the community."
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={window.location.href} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Create an Account - Kerliix" />
-        <meta
-          name="twitter:description"
-          content="Register to create your Kerliix account and join the community."
-        />
       </Helmet>
 
       <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-900 via-black to-gray-900">
@@ -104,74 +91,89 @@ export default function Register() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="flex space-x-4">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
-                  placeholder="First Name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="flex-1">
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
-                  placeholder="Last Name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
               <input
                 type="text"
-                className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
-                placeholder="Your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                className="flex-1 px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
+              <input
+                type="text"
+                className="flex-1 px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
                 required
               />
             </div>
 
-            <div>
-              <input
-                type="email"
-                className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+            <input
+              type="text"
+              className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
+              placeholder="Your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
 
-            <div>
+            <input
+              type="email"
+              className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            {/* DOB */}
+            <input
+              type="date"
+              className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={dob}
+              onChange={(e) => setDob(e.target.value)}
+              required
+            />
+
+            {/* Password */}
+            <div className="relative">
               <input
-                type="password"
-                className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
+                type={showPassword ? 'text' : 'password'}
+                className="w-full px-4 py-2 pr-10 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-300"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
 
-            <div>
+            {/* Confirm Password */}
+            <div className="relative">
               <input
-                type="password"
-                className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
+                type={showConfirmPassword ? 'text' : 'password'}
+                className="w-full px-4 py-2 pr-10 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
                 placeholder="Verify Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-300"
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
 
-            {/* Use reusable Button component */}
             <Button type="submit" disabled={!isFormValid} isLoading={isSubmitting}>
               Register
             </Button>
@@ -196,4 +198,4 @@ export default function Register() {
       </div>
     </>
   );
-}
+  }
