@@ -35,14 +35,14 @@ export default function Register() {
 
   const currentYear = new Date().getFullYear();
 
-  // ✅ Ensure year never exceeds current year
+  // Ensure year never exceeds current year
   useEffect(() => {
     if (year && Number(year) > currentYear) {
       setYear(String(currentYear));
     }
   }, [year, currentYear]);
 
-  // Auto-adjust days based on month & year
+  // Get days in month
   const getDaysInMonth = (y, m) => {
     if (!y || !m) return 31;
     return new Date(y, m, 0).getDate(); // m is 1-based
@@ -77,16 +77,17 @@ export default function Register() {
   // Combine DOB
   const dob = year && month && day ? `${year}-${month}-${day.padStart(2, '0')}` : '';
 
-  // ✅ Age check
+  // Age check (13+)
   const isOldEnough = () => {
     if (!dob) return false;
     const birthDate = new Date(dob);
     const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
+    let age = today.getFullYear() - birthDate.getFullYear();
     const hasBirthdayPassed =
       today.getMonth() > birthDate.getMonth() ||
       (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate());
-    return age > 13 || (age === 13 && hasBirthdayPassed);
+    if (!hasBirthdayPassed) age--;
+    return age >= 13;
   };
 
   const isFormValid =
@@ -280,11 +281,12 @@ export default function Register() {
             <div className="mt-6 text-center text-white text-sm">
               Already have an account?{' '}
               <button
+                type="button"
                 onClick={() =>
                   navigate(
-                    `/login?redirect=${encodeURIComponent(redirectUrl)}&password=${encodeURIComponent(
-                      password
-                    )}`
+                    `/login?redirect=${encodeURIComponent(
+                      redirectUrl
+                    )}&password=${encodeURIComponent(password)}`
                   )
                 }
                 className="text-blue-300 hover:underline"
