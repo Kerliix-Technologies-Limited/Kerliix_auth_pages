@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Helmet } from 'react-helmet-async';
-import { Eye, EyeOff } from 'lucide-react'; // for show/hide icons
 import API from '../api.js';
 import Button from '../components/Button';
 
@@ -32,6 +31,18 @@ export default function Register() {
     }
   }, [passwordFromLogin]);
 
+  // ✅ Check if user is at least 13 years old
+  const isOldEnough = () => {
+    if (!dob) return false;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const hasBirthdayPassed =
+      today.getMonth() > birthDate.getMonth() ||
+      (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate());
+    return age > 13 || (age === 13 && hasBirthdayPassed);
+  };
+
   const isFormValid =
     firstName.trim() !== '' &&
     lastName.trim() !== '' &&
@@ -40,13 +51,18 @@ export default function Register() {
     dob.trim() !== '' &&
     password.trim() !== '' &&
     confirmPassword.trim() !== '' &&
-    password === confirmPassword;
+    password === confirmPassword &&
+    isOldEnough();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isFormValid) {
-      toast.error('Please fill in all fields correctly');
+      if (!isOldEnough()) {
+        toast.error('You must be at least 13 years old to register.');
+      } else {
+        toast.error('Please fill in all fields correctly.');
+      }
       return;
     }
 
@@ -128,50 +144,62 @@ export default function Register() {
             />
 
             {/* DOB */}
-            <input
-              type="date"
-              className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-              required
-            />
-
-            {/* Password */}
-            <div className="relative">
+            <div>
+              <label className="block text-white mb-1">Date of Birth</label>
               <input
-                type={showPassword ? 'text' : 'password'}
-                className="w-full px-4 py-2 pr-10 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                type="date"
+                className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-300"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+              {!isOldEnough() && dob && (
+                <p className="text-red-400 text-sm mt-1">You must be at least 13 years old.</p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-white mb-1">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="w-full px-4 py-2 pr-16 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-300 hover:text-white"
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
 
             {/* Confirm Password */}
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                className="w-full px-4 py-2 pr-10 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
-                placeholder="Verify Password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-300"
-              >
-                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+            <div>
+              <label className="block text-white mb-1">Verify Password</label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  className="w-full px-4 py-2 pr-16 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-300 hover:text-white"
+                >
+                  {showConfirmPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
 
             <Button type="submit" disabled={!isFormValid} isLoading={isSubmitting}>
