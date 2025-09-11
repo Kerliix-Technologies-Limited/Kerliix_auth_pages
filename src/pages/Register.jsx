@@ -21,7 +21,6 @@ export default function Register() {
 
   const navigate = useNavigate();
   const location = useLocation();
-
   const searchParams = new URLSearchParams(location.search);
   const redirectUrl = searchParams.get('redirect') || 'https://accounts.kerliix.com';
   const passwordFromLogin = searchParams.get('password') || '';
@@ -35,17 +34,15 @@ export default function Register() {
 
   const currentYear = new Date().getFullYear();
 
-  // Ensure year never exceeds current year
   useEffect(() => {
     if (year && Number(year) > currentYear) {
       setYear(String(currentYear));
     }
   }, [year, currentYear]);
 
-  // Get days in month
   const getDaysInMonth = (y, m) => {
     if (!y || !m) return 31;
-    return new Date(y, m, 0).getDate(); // m is 1-based
+    return new Date(y, m, 0).getDate();
   };
 
   const maxDays = getDaysInMonth(year, month);
@@ -74,10 +71,9 @@ export default function Register() {
     { value: '12', label: 'December' },
   ];
 
-  // Combine DOB
-  const dob = year && month && day ? `${year}-${month}-${day.padStart(2, '0')}` : '';
+  const dob =
+    year && month && day ? `${year}-${month}-${day.padStart(2, '0')}` : '';
 
-  // Age check (13+)
   const isOldEnough = () => {
     if (!dob) return false;
     const birthDate = new Date(dob);
@@ -85,7 +81,8 @@ export default function Register() {
     let age = today.getFullYear() - birthDate.getFullYear();
     const hasBirthdayPassed =
       today.getMonth() > birthDate.getMonth() ||
-      (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate());
+      (today.getMonth() === birthDate.getMonth() &&
+        today.getDate() >= birthDate.getDate());
     if (!hasBirthdayPassed) age--;
     return age >= 13;
   };
@@ -135,7 +132,8 @@ export default function Register() {
       );
     } catch (error) {
       console.error('Registration error response:', error.response);
-      const message = error.response?.data?.message || 'Registration failed. Please try again.';
+      const message =
+        error.response?.data?.message || 'Registration failed. Please try again.';
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -154,10 +152,10 @@ export default function Register() {
 
           <form onSubmit={handleSubmit} className="space-y-5 w-full max-w-full">
             {/* Names */}
-            <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+            <div className="flex flex-row space-x-4">
               <input
                 type="text"
-                className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
+                className="flex-1 px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
                 placeholder="First Name"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
@@ -165,7 +163,7 @@ export default function Register() {
               />
               <input
                 type="text"
-                className="w-full px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
+                className="flex-1 px-4 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
                 placeholder="Last Name"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
@@ -194,28 +192,32 @@ export default function Register() {
             />
 
             {/* DOB */}
-            <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
+            <div className="flex flex-row space-x-2">
               <select
                 value={day}
                 onChange={(e) => setDay(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="flex-1 px-3 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
                 required
               >
                 <option value="">Day</option>
                 {days.map((d) => (
-                  <option key={d} value={d}>{d}</option>
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
                 ))}
               </select>
 
               <select
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="flex-1 px-3 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
                 required
               >
                 <option value="">Month</option>
                 {months.map((m) => (
-                  <option key={m.value} value={m.value}>{m.label}</option>
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
                 ))}
               </select>
 
@@ -223,13 +225,15 @@ export default function Register() {
                 type="number"
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
+                className="flex-1 px-3 py-2 rounded-lg bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300"
                 placeholder="Year"
                 required
               />
             </div>
             {!isOldEnough() && dob && (
-              <p className="text-red-400 text-sm mt-1">You must be at least 13 years old.</p>
+              <p className="text-red-400 text-sm mt-1">
+                You must be at least 13 years old.
+              </p>
             )}
 
             {/* Password */}
@@ -295,4 +299,4 @@ export default function Register() {
       </div>
     </>
   );
-      }
+         }
